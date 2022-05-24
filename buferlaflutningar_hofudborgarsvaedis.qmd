@@ -1,0 +1,609 @@
+---
+title: "Búferlaflutningar innan höfuðborgarsvæðisins"
+author: 
+    -   name: "Brynjólfur Gauti Guðrúnar Jónsson"
+        url: "https://twitter.com/bgautijonsson"
+        affiliation: "Tölfræði, Raunvísindadeild Háskóla Íslands"
+        affiliation-url: "https://www.hi.is/tolfraedi_0"
+date: today
+format: 
+    html:
+        code-fold: true
+        toc: true
+        toc-location: right
+        toc-title: Efnisyfirlit
+editor: source
+theme: flatly
+title-block-banner: true
+standalone: true
+self-contained: true
+---
+
+
+```{r}
+#| include: false
+
+library(cowplot)
+library(tidyverse)
+library(scales)
+library(pxweb)
+library(ggthemes)
+library(kableExtra)
+library(gganimate)
+library(lubridate)
+library(geomtextpath)
+library(ggtext)
+library(here)
+library(readxl)
+library(janitor)
+```
+
+
+```{r}
+d <- pxweb_get(url = "https://px.hagstofa.is:443/pxis/api/v1/is/Ibuar/buferlaflutningar/buferlaflinnanlands/buferlaflinnanlands/MAN01201.px",
+               query = list(
+                   "Sveitarfélag" = c("0000", "1000", "1100", "1300", "1400", "1604"),
+                   "Kyn" = c("0"),
+                   "Ár" = c("*"),
+                   "Flutningssvæði" = c("*"),
+                   "Flutningur" = c("*")
+                   
+               )) |> 
+    as.data.frame() |> 
+    as_tibble() |> 
+    janitor::clean_names() |> 
+    rename(fjoldi = buferlaflutningar_eftir_sveitarfelogum_og_kyni_1986_2021) |> 
+    mutate(ar = parse_number(ar))
+```
+
+```{r}
+plot_dat1 <-  d |> 
+    filter(ar >= 2010, flutningssvaedi == "Alls",
+           flutningur == "Aðfluttir umfram brottflutta")
+
+plot_dat2 <-  d |> 
+    filter(ar >= 2010, flutningssvaedi == "Milli sveitarfélaga innan landsvæðis",
+           flutningur == "Aðfluttir umfram brottflutta")
+
+plot_dat3 <-  d |> 
+    filter(ar >= 2010, flutningssvaedi == "Milli landsvæða",
+           flutningur == "Aðfluttir umfram brottflutta")
+
+plot_dat4 <-  d |> 
+    filter(ar >= 2010, flutningssvaedi == "Milli landa",
+           flutningur == "Aðfluttir umfram brottflutta")
+```
+
+
+```{r}
+p1 <- plot_dat1 |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    geom_line(aes(col = sveitarfelag)) +
+    geom_text(data = plot_dat1 |> filter(ar == max(ar)),
+              aes(col = sveitarfelag, label = sveitarfelag),
+              hjust = 0, nudge_x = 0.1) +
+    geom_rangeframe() +
+    scale_x_continuous(limits = c(2010, 2023.4)) +
+    scale_y_continuous(breaks = c(range(plot_dat1$fjoldi), -500, 0, 1000, 1500)) +
+    scale_colour_brewer(type = "qual", palette = "Dark2") +
+    theme_tufte() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL,
+         title = "Aðfluttir umfram brottflutta alls")
+
+p1
+```
+
+```{r}
+p2 <- plot_dat2 |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    geom_line(aes(col = sveitarfelag)) +
+    geom_text(data = plot_dat2 |> filter(ar == max(ar)),
+              aes(col = sveitarfelag, label = sveitarfelag),
+              hjust = 0, nudge_x = 0.1) +
+    geom_rangeframe() +
+    scale_x_continuous(limits = c(2010, 2023.4)) +
+    scale_y_continuous(breaks = c(range(plot_dat2$fjoldi), -500, 0, 300)) +
+    scale_colour_brewer(type = "qual", palette = "Dark2") +
+    theme_tufte() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL,
+         title = "Aðfluttir umfram brottflutta í flutningum milli sveitarfélaga höfuðborgarsvæðisins")
+
+p2
+```
+
+```{r}
+p3 <- plot_dat3 |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    geom_line(aes(col = sveitarfelag)) +
+    geom_text(data = plot_dat3 |> filter(ar == max(ar)),
+              aes(col = sveitarfelag, label = sveitarfelag),
+              hjust = 0, nudge_x = 0.1) +
+    geom_rangeframe() +
+    scale_x_continuous(limits = c(2010, 2023.4)) +
+    scale_y_continuous(breaks = c(range(plot_dat3$fjoldi),  -100, 0, 200)) +
+    scale_colour_brewer(type = "qual", palette = "Dark2") +
+    theme_tufte() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL,
+         title = "Aðfluttir umfram brottflutta milli landsvæða")
+
+p3
+```
+
+
+
+```{r}
+p4 <- plot_dat4 |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    geom_line(aes(col = sveitarfelag)) +
+    geom_text(data = plot_dat4 |> filter(ar == max(ar)),
+              aes(col = sveitarfelag, label = sveitarfelag),
+              hjust = 0, nudge_x = 0.1) +
+    geom_rangeframe() +
+    scale_x_continuous(limits = c(2010, 2023.4)) +
+    scale_y_continuous(breaks = c(range(plot_dat4$fjoldi), -500, 0, 500)) +
+    scale_colour_brewer(type = "qual", palette = "Dark2") +
+    theme_tufte() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL,
+         title = "Aðfluttir umfram brottflutta milli landa")
+
+p4
+```
+
+# Hvert flytja og hvaðan koma?
+
+## Heild
+
+## facet_grid
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010) |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    geom_hline(yintercept = 0, lty = 2) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_grid(sveitarfelag ~ flutningur, scales = "free") +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá sveitarfélögum Höfuðborgarsvæðisins") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar.png",
+       width = 8, height = 1.1 * 8, scale = 1.5, bg = "white")
+```
+
+### facet_wrap
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010) |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2012, 2014, 2016, 2018, 2020)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("sveitarfelag", "flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá sveitarfélögum Höfuðborgarsvæðisins",
+         caption = "Kóði og gögn: https://github.com/bgautijonsson/buferlaflutningar_hofudborgarsvaedis") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap.png",
+       width = 8, height = 1.2 * 8, scale = 1.5, bg = "white")
+```
+
+## Reykjavík
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Reykjavíkurborg") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Reykjavíkurborg") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_reykjavik.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+## Seltjarnarnes
+
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Seltjarnarnesbær") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Seltjarnarnesi") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_seltjarnarnes.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+## Garðabær
+
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Garðabær") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Garðabæ") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_gardabaer.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+## Kópavogur
+
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Kópavogsbær") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Kópavogsbæ") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_kopavogur.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+## Hafnarfjörður
+
+
+```{r, fig.width = 12, fig.asp = 0.5, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Hafnarfjarðarkaupstaður") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Hafnarfjarðarkaupstað") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_hafnarfjordur.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+## Mosfellsbær
+
+
+```{r, fig.width = 12, fig.asp = 1, out.width = "100%"}
+p <- d |> 
+    filter(!flutningssvaedi %in% c("Alls", "Innan sveitarfélags"),
+           ar >= 2010,
+           sveitarfelag == "Mosfellsbær") |> 
+    mutate(flutningur = fct_relevel(flutningur, "Aðfluttir", "Brottfluttir")) |> 
+    ggplot(aes(ar, fjoldi)) +
+    geom_col(aes(fill = flutningssvaedi), position = "stack", width = 1, alpha = 0.8) +
+    scale_x_continuous(breaks = c(2010, 2014, 2018, 2021)) +
+    scale_y_continuous() +
+    scale_colour_brewer(type = "qual", palette = "Set1") +
+    scale_fill_brewer(type = "qual", palette = "Set1") +
+    coord_cartesian(expand = FALSE) +
+    facet_wrap(c("flutningur"), scales = "free", ncol = 3) +
+    theme_half_open() +
+    theme(legend.position = "top",
+          plot.margin = margin(t = 5, r = 5, b = 5, l = 5)) +
+    labs(x = NULL,
+         y = NULL,
+         fill = NULL,
+         title = "Fólksflutningar til og frá Mosfellsbæ") 
+
+p
+
+
+ggsave(plot = p, filename = "folksflutningar_wrap_mosfellsbaer.png",
+       width = 8, height = 0.5 * 8, scale = 1.5, bg = "white")
+```
+
+# Eftir aldri
+
+```{r}
+d <- pxweb_get(
+    url = "https://px.hagstofa.is:443/pxis/api/v1/is/Ibuar/buferlaflutningar/buferlaflinnanlands/buferlaflinnanlands/MAN01002.px",
+    query = list(
+        "Kyn" = c("0"),
+        "Ár" = c("*"),
+        "Brottflutningssvæði" = c("*"),
+        "Aldur" = c("*"),
+        "Aðflutningssvæði" = c("*")
+    ),
+    verbose = FALSE
+) |> 
+    as.data.frame() |> 
+    as_tibble() |> 
+    janitor::clean_names() |> 
+    rename(fjoldi = buferlaflutningar_milli_landsvaeda_eftir_kyni_og_aldri_1986_2021) |> 
+    mutate(ar = parse_number(ar)) |> 
+    select(-kyn) |> 
+    filter(str_detect(adflutningssvaedi, "Höfuðborgarsvæði") | str_detect(brottflutningssvaedi, "Höfuðborgarsvæði")) |> 
+    filter(aldur != "Alls") |> 
+    mutate(aldur = ifelse(aldur == "Á fyrsta ári", "0", aldur) |> parse_number())
+```
+
+```{r, fig.width = 10, fig.asp = 0.5, out.width = "100%"}
+d |> 
+    filter(!str_detect(adflutningssvaedi, "Höfuðb"),
+           ar >= 2010) |> 
+    count(ar, aldur, wt = fjoldi) |> 
+    group_by(ar) |> 
+    mutate(p = n / sum(n)) |> 
+    ungroup() |> 
+    ggplot(aes(x = aldur, y = factor(ar))) +
+    geom_ridgeline(aes(fill = ar, group = ar, height = p, scale = 40)) +
+    coord_cartesian(expand = FALSE) +
+    theme_half_open() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL)
+```
+
+```{r, fig.width = 10, fig.asp = 0.5, out.width = "100%"}
+d |> 
+    filter(!str_detect(brottflutningssvaedi, "Höfuðb"),
+           ar >= 2010) |> 
+    count(ar, aldur, wt = fjoldi) |> 
+    group_by(ar) |> 
+    mutate(p = n / sum(n)) |> 
+    ungroup() |> 
+    ggplot(aes(x = aldur, y = factor(ar))) +
+    geom_ridgeline(aes(fill = ar, group = ar, height = p, scale = 40)) +
+    coord_cartesian(expand = FALSE) +
+    theme_half_open() +
+    theme(legend.position = "none") +
+    labs(x = NULL,
+         y = NULL)
+```
+
+
+## Eftir aldri
+
+### Alls
+
+```{r}
+p <- d |> 
+    filter(!str_detect(brottflutningssvaedi, "Höfuðb")) |> 
+    count(ar, aldur, wt = fjoldi, name = "adfluttir") |> 
+    inner_join(
+        d |> 
+            filter(!str_detect(adflutningssvaedi, "Höfuðb")) |> 
+            count(ar, aldur, wt = fjoldi, name = "brottfluttir"),
+        by = c("ar", "aldur")
+    ) |> 
+    mutate(fjoldi = adfluttir - brottfluttir) |> 
+    group_by(aldur) |> 
+    filter(ar >= 2010) |> 
+    mutate(fjoldi = cumsum(fjoldi)) |> 
+    ungroup() |> 
+    ggplot(aes(x = aldur, y = fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    stat_smooth(se = 0, span = 0.2, aes(col = ar, fill = ar), geom = "area") +
+    # geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = ar, group = ar)) +
+    scale_x_continuous(expand = expansion()) +
+    scale_colour_distiller(type = "div", palette = "PiYG") +
+    scale_fill_distiller(type = "div", palette = "PiYG") +
+    theme_half_open(font_size = 10) +
+    theme(legend.position = "none",
+          plot.margin = margin(t = 5, r = 15, b = 5, l = 5)) +
+    labs(x = "Aldur", y = "Aðfluttir umfram brottflutta",
+         title = "Uppsafnaður fjöldi aðfluttra umfram brottflutta til Höfuðborgarsvæðisins eftir aldri (2010 - 2021)",
+         subtitle = "Ár: {frame_time}") +
+    transition_time(as.integer(ar)) +
+    ease_aes("cubic-in-out") +
+    shadow_trail()
+
+p_vid <- animate(p, width = 8, height = 0.5 * 8, unit = "in", res = 150, fps = 25, duration = 10,
+                 renderer = ffmpeg_renderer(format = "mp4"))
+
+anim_save(filename = "flutningar.mp4", animation = p_vid)
+```
+
+### Án útlanda
+
+```{r}
+p <- d |> 
+    filter(!str_detect(brottflutningssvaedi, "Höfuðb"), 
+           !str_detect(brottflutningssvaedi, "Útlönd"),
+           !str_detect(adflutningssvaedi, "Útlönd")) |> 
+    count(ar, aldur, wt = fjoldi, name = "adfluttir") |> 
+    inner_join(
+        d |> 
+            filter(!str_detect(adflutningssvaedi, "Höfuðb"),
+                   !str_detect(brottflutningssvaedi, "Útlönd"),
+                   !str_detect(adflutningssvaedi, "Útlönd")) |> 
+            count(ar, aldur, wt = fjoldi, name = "brottfluttir"),
+        by = c("ar", "aldur")
+    ) |> 
+    mutate(fjoldi = adfluttir - brottfluttir) |> 
+    group_by(aldur) |> 
+    filter(ar >= 2010) |> 
+    mutate(fjoldi = cumsum(fjoldi)) |> 
+    ungroup() |> 
+    ggplot(aes(x = aldur, y = fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    stat_smooth(se = 0, span = 0.2, aes(col = ar, fill = ar), geom = "area") +
+    # geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = ar, group = ar)) +
+    scale_x_continuous(expand = expansion()) +
+    scale_colour_distiller(type = "div", palette = "PiYG") +
+    scale_fill_distiller(type = "div", palette = "PiYG") +
+    theme_half_open(font_size = 10) +
+    theme(legend.position = "none",
+          plot.margin = margin(t = 5, r = 15, b = 5, l = 5)) +
+    labs(x = "Aldur", y = "Aðfluttir umfram brottflutta",
+         title = "Uppsafnaður fjöldi aðfluttra umfram brottflutta til Höfuðborgarsvæðisins eftir aldri (2010 - 2021)",
+         subtitle = "Ár: {frame_time}") +
+    transition_time(as.integer(ar)) +
+    ease_aes("cubic-in-out") +
+    shadow_trail()
+
+p_vid <- animate(p, width = 8, height = 0.5 * 8, unit = "in", res = 150, fps = 25, duration = 10,
+                 renderer = ffmpeg_renderer(format = "mp4"))
+
+anim_save(filename = "flutningar_an_utlanda.mp4", animation = p_vid)
+```
+
+
+
+### Bara útlönd
+
+```{r}
+p <- d |> 
+    filter(!str_detect(brottflutningssvaedi, "Höfuðb"), 
+           str_detect(brottflutningssvaedi, "Útlönd") | str_detect(adflutningssvaedi, "Útlönd")) |> 
+    count(ar, aldur, wt = fjoldi, name = "adfluttir") |> 
+    inner_join(
+        d |> 
+            filter(!str_detect(adflutningssvaedi, "Höfuðb"),
+                   str_detect(brottflutningssvaedi, "Útlönd") | str_detect(adflutningssvaedi, "Útlönd")) |> 
+            count(ar, aldur, wt = fjoldi, name = "brottfluttir"),
+        by = c("ar", "aldur")
+    ) |> 
+    
+    mutate(fjoldi = adfluttir - brottfluttir) |> 
+    group_by(aldur) |> 
+    filter(ar >= 2010) |> 
+    mutate(fjoldi = cumsum(fjoldi)) |> 
+    ungroup() |> 
+    ggplot(aes(x = aldur, y = fjoldi)) +
+    geom_hline(yintercept = 0, lty = 2, alpha = 0.5) +
+    stat_smooth(se = 0, span = 0.2, aes(col = ar, fill = ar), geom = "area") +
+    # geom_ribbon(aes(ymin = ymin, ymax = ymax, fill = ar, group = ar)) +
+    scale_x_continuous(expand = expansion()) +
+    scale_colour_distiller(type = "div", palette = "PiYG") +
+    scale_fill_distiller(type = "div", palette = "PiYG") +
+    theme_half_open(font_size = 10) +
+    theme(legend.position = "none",
+          plot.margin = margin(t = 5, r = 15, b = 5, l = 5)) +
+    labs(x = "Aldur", y = "Aðfluttir umfram brottflutta",
+         title = "Uppsafnaður fjöldi aðfluttra umfram brottflutta til Höfuðborgarsvæðisins eftir aldri (2010 - 2021)",
+         subtitle = "Ár: {frame_time}") +
+    transition_time(as.integer(ar)) +
+    ease_aes("cubic-in-out") +
+    shadow_trail()
+
+p_vid <- animate(p, width = 8, height = 0.5 * 8, unit = "in", res = 150, fps = 25, duration = 10,
+                 renderer = ffmpeg_renderer(format = "mp4"))
+
+anim_save(filename = "flutningar_bara_utlond.mp4", animation = p_vid)
+```
